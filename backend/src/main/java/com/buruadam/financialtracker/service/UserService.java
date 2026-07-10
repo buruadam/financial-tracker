@@ -1,5 +1,6 @@
 package com.buruadam.financialtracker.service;
 
+import com.buruadam.financialtracker.dto.UserLoginRequest;
 import com.buruadam.financialtracker.dto.UserRegisterRequest;
 import com.buruadam.financialtracker.dto.UserResponse;
 import com.buruadam.financialtracker.entity.User;
@@ -32,5 +33,17 @@ public class UserService {
         User savedUser = userRepository.save(user);
 
         return new UserResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
+    }
+
+    public UserResponse loginUser(UserLoginRequest request) {
+        User user = userRepository.findByEmail(request.usernameOrEmail())
+                .or(() -> userRepository.findByUsername(request.usernameOrEmail()))
+                .orElseThrow(() -> new RuntimeException("Invalid username, email or password"));
+
+        if (!user.getPassword().equals(request.password())) {
+            throw new RuntimeException("Invalid username, email or password");
+        }
+
+        return new UserResponse(user.getId(), user.getUsername(), user.getEmail());
     }
 }

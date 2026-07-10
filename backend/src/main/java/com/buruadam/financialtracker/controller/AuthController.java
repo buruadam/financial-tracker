@@ -1,5 +1,6 @@
 package com.buruadam.financialtracker.controller;
 
+import com.buruadam.financialtracker.dto.UserLoginRequest;
 import com.buruadam.financialtracker.dto.UserRegisterRequest;
 import com.buruadam.financialtracker.dto.UserResponse;
 import com.buruadam.financialtracker.service.UserService;
@@ -25,5 +26,11 @@ public class AuthController {
     public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRegisterRequest request) {
         UserResponse response = userService.registerUser(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserResponse> login(@Valid @RequestBody UserLoginRequest request) {
+        UserResponse response = userService.loginUser(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
