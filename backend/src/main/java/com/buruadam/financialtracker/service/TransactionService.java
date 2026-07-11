@@ -79,7 +79,15 @@ public class TransactionService {
 
     @Transactional(readOnly = true)
     public List<TransactionResponse> getTransactionsByAccount(UUID accountId) {
-        return transactionRepository.findByAccountId(accountId).stream()
+        User currentUser = getCurrentUser();
+
+        Account account = accountRepository.findById(accountId)
+                .filter(acc -> acc.getUser().getId().equals(currentUser.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        String.format("Account not found with ID: '%s'", accountId)
+                ));
+
+        return transactionRepository.findByAccountId(account.getId()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
