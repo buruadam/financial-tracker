@@ -4,6 +4,7 @@ import com.buruadam.financialtracker.dto.UserLoginRequest;
 import com.buruadam.financialtracker.dto.UserRegisterRequest;
 import com.buruadam.financialtracker.dto.UserResponse;
 import com.buruadam.financialtracker.entity.User;
+import com.buruadam.financialtracker.exception.ResourceAlreadyExistsException;
 import com.buruadam.financialtracker.repository.UserRepository;
 import com.buruadam.financialtracker.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,10 +30,10 @@ public class UserService {
 
     public UserResponse registerUser(UserRegisterRequest request) {
         if (userRepository.findByUsername(request.username()).isPresent()) {
-            throw new RuntimeException("Username is already taken");
+            throw new ResourceAlreadyExistsException("Username is already taken");
         }
         if (userRepository.findByEmail(request.email()).isPresent()) {
-            throw new RuntimeException("Email is already registered");
+            throw new ResourceAlreadyExistsException("Email is already registered");
         }
 
         User user = new User();

@@ -4,6 +4,7 @@ import com.buruadam.financialtracker.dto.CategoryRequest;
 import com.buruadam.financialtracker.dto.CategoryResponse;
 import com.buruadam.financialtracker.entity.TransactionCategory;
 import com.buruadam.financialtracker.entity.User;
+import com.buruadam.financialtracker.exception.ResourceAlreadyExistsException;
 import com.buruadam.financialtracker.repository.TransactionCategoryRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,8 +26,11 @@ public class TransactionCategoryService {
         User currentUser = getCurrentUser();
 
         transactionCategoryRepository.findByUserIdAndNameAndType(currentUser.getId(), request.name(), request.type())
-                .ifPresent(c -> {
-                    throw new RuntimeException("Category already exists with name '" + request.name() + "' and type '" + request.type() + "'");
+                .ifPresent(_ -> {
+                    throw new ResourceAlreadyExistsException(
+                            String.format("Category already exists with name '%s' and type '%s'", request.name(), request.type())
+                    );
+
                 });
 
         TransactionCategory category = new TransactionCategory();
