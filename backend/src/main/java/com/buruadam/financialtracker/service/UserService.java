@@ -5,6 +5,7 @@ import com.buruadam.financialtracker.dto.UserRegisterRequest;
 import com.buruadam.financialtracker.dto.UserResponse;
 import com.buruadam.financialtracker.entity.User;
 import com.buruadam.financialtracker.repository.UserRepository;
+import com.buruadam.financialtracker.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,11 +18,13 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
     public UserResponse registerUser(UserRegisterRequest request) {
@@ -39,7 +42,7 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
 
-        return new UserResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
+        return new UserResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail(), null);
     }
 
     public UserResponse loginUser(UserLoginRequest request) {
@@ -49,6 +52,8 @@ public class UserService {
 
         User user = (User) authentication.getPrincipal();
 
-        return new UserResponse(user.getId(), user.getUsername(), user.getEmail());
+        String jwtToken = jwtService.generateToken(user);
+
+        return new UserResponse(user.getId(), user.getUsername(), user.getEmail(), jwtToken);
     }
 }
