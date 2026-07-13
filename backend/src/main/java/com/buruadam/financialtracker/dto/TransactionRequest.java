@@ -9,5 +9,5 @@ public record TransactionRequest(
         String description,
         LocalDate date,
         UUID accountId,
-        Long categoryId
+        UUID categoryId
 ) {}

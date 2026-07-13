@@ -4,12 +4,12 @@ import com.buruadam.financialtracker.dto.TransactionRequest;
 import com.buruadam.financialtracker.dto.TransactionResponse;
 import com.buruadam.financialtracker.entity.Account;
 import com.buruadam.financialtracker.entity.Transaction;
-import com.buruadam.financialtracker.entity.TransactionCategory;
+import com.buruadam.financialtracker.entity.Category;
 import com.buruadam.financialtracker.entity.User;
 import com.buruadam.financialtracker.enums.TransactionType;
 import com.buruadam.financialtracker.exception.ResourceNotFoundException;
 import com.buruadam.financialtracker.repository.AccountRepository;
-import com.buruadam.financialtracker.repository.TransactionCategoryRepository;
+import com.buruadam.financialtracker.repository.CategoryRepository;
 import com.buruadam.financialtracker.repository.TransactionRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,14 +25,14 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
-    private final TransactionCategoryRepository transactionCategoryRepository;
+    private final CategoryRepository categoryRepository;
 
     public TransactionService(TransactionRepository transactionRepository,
                               AccountRepository accountRepository,
-                              TransactionCategoryRepository transactionCategoryRepository) {
+                              CategoryRepository categoryRepository) {
         this.transactionRepository = transactionRepository;
         this.accountRepository = accountRepository;
-        this.transactionCategoryRepository = transactionCategoryRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @Transactional
@@ -48,7 +48,7 @@ public class TransactionService {
             throw new RuntimeException("You do not have permission to use this account!");
         }
 
-        TransactionCategory category = transactionCategoryRepository.findById(request.categoryId())
+        Category category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         String.format("Transaction category not found with ID: '%s'", request.categoryId())
                 ));

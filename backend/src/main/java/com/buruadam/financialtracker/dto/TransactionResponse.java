@@ -11,7 +11,7 @@ public record TransactionResponse(
         LocalDate date,
         UUID accountId,
         String accountName,
-        Long categoryId,
+        UUID categoryId,
         String categoryName,
         String transactionType
 ) {}
