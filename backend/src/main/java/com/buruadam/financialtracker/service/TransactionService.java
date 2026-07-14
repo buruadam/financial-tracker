@@ -69,6 +69,19 @@ public class TransactionService {
                 .toList();
     }
 
+    @Transactional
+    public void deleteTransaction(UUID transactionId, UUID userId) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+
+        Account account = getValidatedAccount(transaction.getAccount().getId(), userId);
+
+        BigDecimal reverseAmount = transaction.getAmount().negate();
+        updateAccountBalance(account, reverseAmount, transaction.getCategory().getType());
+
+        transactionRepository.delete(transaction);
+    }
+
     private Account getValidatedAccount(UUID accountId, UUID userId) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));

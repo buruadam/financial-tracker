@@ -42,4 +42,12 @@ public class TransactionController {
         return ResponseEntity.ok(responses);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTransaction(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal CustomUserDetails currentUserDetails) {
+
+        transactionService.deleteTransaction(id, currentUserDetails.getId());
+        return ResponseEntity.noContent().build();
+    }
 }
