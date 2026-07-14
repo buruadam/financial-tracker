@@ -3,7 +3,8 @@ package com.buruadam.financialtracker.controller;
 import com.buruadam.financialtracker.dto.UserLoginRequest;
 import com.buruadam.financialtracker.dto.UserRegisterRequest;
 import com.buruadam.financialtracker.dto.UserResponse;
-import com.buruadam.financialtracker.service.UserService;
+import com.buruadam.financialtracker.security.CookieService;
+import com.buruadam.financialtracker.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -18,51 +19,33 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final UserService userService;
+    private final AuthService authService;
+    private final CookieService cookieService;
 
-    public AuthController(UserService userService) {
-        this.userService = userService;
+    public AuthController(AuthService authService, CookieService cookieService) {
+        this.authService = authService;
+        this.cookieService = cookieService;
     }
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRegisterRequest request) {
-        UserResponse response = userService.registerUser(request);
+        UserResponse response = authService.register(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> login(@Valid @RequestBody UserLoginRequest request) {
-        UserResponse serviceResponse = userService.loginUser(request);
-
-        ResponseCookie cookie = ResponseCookie.from("jwt_token", serviceResponse.token())
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(24 * 60 * 60)
-                .sameSite("Lax")
-                .build();
-
-        UserResponse response = new UserResponse(
-                serviceResponse.id(),
-                serviceResponse.username(),
-                serviceResponse.email(),
-                null
-        );
+    public ResponseEntity<Void> login(@Valid @RequestBody UserLoginRequest request) {
+        String token = authService.login(request);
+        ResponseCookie cookie = cookieService.createJwtCookie(token);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(response);
+                .build();
     }
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
-        ResponseCookie cookie = ResponseCookie.from("jwt_token", "")
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(0)
-                .sameSite("Lax")
-                .build();
+        ResponseCookie cookie = cookieService.cleanJwtCookie();
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
