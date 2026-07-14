@@ -10,25 +10,27 @@ import com.buruadam.financialtracker.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class UserService {
+public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
     }
 
-    public UserResponse registerUser(UserRegisterRequest request) {
+    public UserResponse register(UserRegisterRequest request) {
         if (userRepository.findByUsername(request.username()).isPresent()) {
             throw new ResourceAlreadyExistsException("Username is already taken");
         }
@@ -46,15 +48,16 @@ public class UserService {
         return new UserResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail(), null);
     }
 
-    public UserResponse loginUser(UserLoginRequest request) {
+    @Transactional(readOnly = true)
+    public String login(UserLoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.usernameOrEmail(), request.password())
         );
 
-        User user = (User) authentication.getPrincipal();
+        if (!(authentication.getPrincipal() instanceof UserDetails userDetails)) {
+            throw new IllegalStateException("Authentication principal is not a UserDetails");
+        }
 
-        String jwtToken = jwtService.generateToken(user);
-
-        return new UserResponse(user.getId(), user.getUsername(), user.getEmail(), jwtToken);
+        return jwtService.generateToken(userDetails);
     }
 }

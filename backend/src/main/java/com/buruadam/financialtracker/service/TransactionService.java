@@ -3,16 +3,13 @@ package com.buruadam.financialtracker.service;
 import com.buruadam.financialtracker.dto.TransactionRequest;
 import com.buruadam.financialtracker.dto.TransactionResponse;
 import com.buruadam.financialtracker.entity.Account;
-import com.buruadam.financialtracker.entity.Transaction;
 import com.buruadam.financialtracker.entity.Category;
-import com.buruadam.financialtracker.entity.User;
+import com.buruadam.financialtracker.entity.Transaction;
 import com.buruadam.financialtracker.enums.TransactionType;
 import com.buruadam.financialtracker.exception.ResourceNotFoundException;
 import com.buruadam.financialtracker.repository.AccountRepository;
 import com.buruadam.financialtracker.repository.CategoryRepository;
 import com.buruadam.financialtracker.repository.TransactionRepository;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,24 +33,20 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransactionResponse createTransaction(TransactionRequest request) {
-        User currentUser = getCurrentUser();
+    public TransactionResponse createTransaction(TransactionRequest request, UUID userId) {
+
 
         Account account = accountRepository.findById(request.accountId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        String.format("Account not found with ID: '%s'", request.accountId())
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
-        if (!account.getUser().getId().equals(currentUser.getId())) {
+        if (!account.getUser().getId().equals(userId)) {
             throw new RuntimeException("You do not have permission to use this account!");
         }
 
         Category category = categoryRepository.findById(request.categoryId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        String.format("Transaction category not found with ID: '%s'", request.categoryId())
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
-        if (!category.getUser().getId().equals(currentUser.getId())) {
+        if (!category.getUser().getId().equals(userId)) {
             throw new RuntimeException("You do not have permission to use this category!");
         }
 
@@ -78,14 +71,10 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public List<TransactionResponse> getTransactionsByAccount(UUID accountId) {
-        User currentUser = getCurrentUser();
-
+    public List<TransactionResponse> getTransactionsByAccount(UUID accountId, UUID userId) {
         Account account = accountRepository.findById(accountId)
-                .filter(acc -> acc.getUser().getId().equals(currentUser.getId()))
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        String.format("Account not found with ID: '%s'", accountId)
-                ));
+                .filter(acc -> acc.getUser().getId().equals(userId))
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
         return transactionRepository.findByAccountId(account.getId()).stream()
                 .map(this::mapToResponse)
@@ -93,10 +82,8 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public List<TransactionResponse> getAllTransactionsForCurrentUser() {
-        User currentUser = getCurrentUser();
-
-        return transactionRepository.findByAccountUserId(currentUser.getId()).stream()
+    public List<TransactionResponse> getAllTransactionsForCurrentUser(UUID userId) {
+        return transactionRepository.findByAccountUserId(userId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -113,10 +100,5 @@ public class TransactionService {
                 transaction.getCategory().getName(),
                 transaction.getCategory().getType().name()
         );
-    }
-
-    private User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return (User) authentication.getPrincipal();
     }
 }

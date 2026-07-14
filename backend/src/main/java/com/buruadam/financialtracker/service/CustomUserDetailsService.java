@@ -1,6 +1,8 @@
 package com.buruadam.financialtracker.service;
 
+import com.buruadam.financialtracker.entity.User;
 import com.buruadam.financialtracker.repository.UserRepository;
+import com.buruadam.financialtracker.security.CustomUserDetails;
 import lombok.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -19,8 +21,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @NonNull
     public UserDetails loadUserByUsername(@NonNull String usernameOrEmail) throws UsernameNotFoundException {
-        return userRepository.findByEmail(usernameOrEmail)
-                .or(() -> userRepository.findByUsername(usernameOrEmail))
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with identifier: " + usernameOrEmail));
+        User user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username or email: " + usernameOrEmail));
+
+        return new CustomUserDetails(user);
     }
 }

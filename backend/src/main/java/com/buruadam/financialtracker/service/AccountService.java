@@ -4,26 +4,25 @@ import com.buruadam.financialtracker.dto.AccountCreateRequest;
 import com.buruadam.financialtracker.dto.AccountResponse;
 import com.buruadam.financialtracker.entity.Account;
 import com.buruadam.financialtracker.entity.User;
+import com.buruadam.financialtracker.exception.ResourceNotFoundException;
 import com.buruadam.financialtracker.repository.AccountRepository;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.buruadam.financialtracker.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class AccountService {
 
     private final AccountRepository accountRepository;
+    private final UserRepository userRepository;
 
-    public AccountService(AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
-    }
-
-    public AccountResponse createAccount(AccountCreateRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User currentUser = (User) authentication.getPrincipal();
+    public AccountResponse createAccount(AccountCreateRequest request, UUID userId) {
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Account account = new Account();
         account.setName(request.name());
@@ -41,22 +40,16 @@ public class AccountService {
         );
     }
 
-    public List<AccountResponse> getMyAccounts() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User currentUser = (User) authentication.getPrincipal();
+    public List<AccountResponse> getMyAccounts(UUID userId) {
+        List<Account> accounts = accountRepository.findByUserId(userId);
 
-        List<Account> accounts = accountRepository.findByUserId(currentUser.getId());
-
-        List<AccountResponse> responseList = new ArrayList<>();
-        for (Account account : accounts) {
-            responseList.add(new AccountResponse(
-                    account.getId(),
-                    account.getName(),
-                    account.getBalance(),
-                    account.getCurrency().getCurrencyCode()
-            ));
-        }
-
-        return responseList;
+        return accounts.stream()
+                .map(account -> new AccountResponse(
+                        account.getId(),
+                        account.getName(),
+                        account.getBalance(),
+                        account.getCurrency().getCurrencyCode()
+                ))
+                .toList();
     }
 }
