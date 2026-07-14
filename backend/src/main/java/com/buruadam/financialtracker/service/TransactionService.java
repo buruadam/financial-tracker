@@ -5,6 +5,7 @@ import com.buruadam.financialtracker.dto.transaction.TransactionResponseDto;
 import com.buruadam.financialtracker.entity.Account;
 import com.buruadam.financialtracker.entity.Category;
 import com.buruadam.financialtracker.entity.Transaction;
+import com.buruadam.financialtracker.enums.TransactionType;
 import com.buruadam.financialtracker.exception.ResourceNotFoundException;
 import com.buruadam.financialtracker.exception.UnauthorizedAccessException;
 import com.buruadam.financialtracker.mapper.TransactionMapper;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,24 +31,16 @@ public class TransactionService {
 
     @Transactional
     public TransactionResponseDto createTransaction(TransactionCreateRequest request, UUID userId) {
-        Account account = accountRepository.findById(request.accountId())
-                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
-        if (!account.getUser().getId().equals(userId)) {
-            throw new UnauthorizedAccessException("You do not own this account");
-        }
+        Account account = getValidatedAccount(request.accountId(), userId);
+        Category category = getValidatedCategory(request.categoryId(), userId);
 
-        Category category = categoryRepository.findById(request.categoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
-        if (!category.getUser().getId().equals(userId)) {
-            throw new UnauthorizedAccessException("You do not own this category");
-        }
+        updateAccountBalance(account, request.amount(), category.getType());
 
         Transaction transaction = transactionMapper.toEntity(request);
         transaction.setAccount(account);
         transaction.setCategory(category);
 
         Transaction savedTransaction = transactionRepository.save(transaction);
-
         return transactionMapper.toResponseDto(savedTransaction);
     }
 
@@ -73,6 +67,32 @@ public class TransactionService {
         return transactions.stream()
                 .map(transactionMapper::toResponseDto)
                 .toList();
+    }
+
+    private Account getValidatedAccount(UUID accountId, UUID userId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+        if (!account.getUser().getId().equals(userId)) {
+            throw new UnauthorizedAccessException("You do not own this account");
+        }
+        return account;
+    }
+
+    private Category getValidatedCategory(UUID categoryId, UUID userId) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        if (!category.getUser().getId().equals(userId)) {
+            throw new UnauthorizedAccessException("You do not own this category");
+        }
+        return category;
+    }
+
+    private void updateAccountBalance(Account account, BigDecimal amount, TransactionType type) {
+        if (type == TransactionType.INCOME) {
+            account.setBalance(account.getBalance().add(amount));
+        } else if (type == TransactionType.EXPENSE) {
+            account.setBalance(account.getBalance().subtract(amount));
+        }
     }
 
 }
