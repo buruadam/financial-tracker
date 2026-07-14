@@ -5,7 +5,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -22,13 +21,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, List<String>> errors = new TreeMap<>();
 
-        ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.computeIfAbsent(fieldName, _ -> new ArrayList<>()).add(errorMessage);
-        });
-
-        errors.forEach((_, errorList) -> Collections.sort(errorList));
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                errors.computeIfAbsent(error.getField(), _ -> new ArrayList<>()).add(error.getDefaultMessage())
+        );
+        errors.forEach((_, list) -> Collections.sort(list));
 
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST,
@@ -44,7 +40,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ProblemDetail> handleAuthenticationExceptions(AuthenticationException ex) {
-        return buildProblemResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", "Invalid username, email or password");
+        return buildProblemResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage());
     }
 
     @ExceptionHandler(ResourceAlreadyExistsException.class)
