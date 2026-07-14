@@ -1,7 +1,7 @@
 package com.buruadam.financialtracker.controller;
 
-import com.buruadam.financialtracker.dto.AccountCreateRequest;
-import com.buruadam.financialtracker.dto.AccountResponse;
+import com.buruadam.financialtracker.dto.account.AccountCreateRequest;
+import com.buruadam.financialtracker.dto.account.AccountResponseDto;
 import com.buruadam.financialtracker.security.CustomUserDetails;
 import com.buruadam.financialtracker.service.AccountService;
 import jakarta.validation.Valid;
@@ -23,14 +23,14 @@ public class AccountController {
     }
 
     @PostMapping
-    public ResponseEntity<AccountResponse> createAccount(@Valid @RequestBody AccountCreateRequest request, @AuthenticationPrincipal CustomUserDetails currentUserDetails) {
-        AccountResponse response = accountService.createAccount(request, currentUserDetails.getId());
+    public ResponseEntity<AccountResponseDto> createAccount(@Valid @RequestBody AccountCreateRequest request, @AuthenticationPrincipal CustomUserDetails currentUserDetails) {
+        AccountResponseDto response = accountService.createAccount(request, currentUserDetails.getId());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<AccountResponse>> getMyAccounts(@AuthenticationPrincipal CustomUserDetails currentUserDetails) {
-        List<AccountResponse> responses = accountService.getMyAccounts(currentUserDetails.getId());
+    public ResponseEntity<List<AccountResponseDto>> getMyAccounts(@AuthenticationPrincipal CustomUserDetails currentUserDetails) {
+        List<AccountResponseDto> responses = accountService.getMyAccounts(currentUserDetails.getId());
         return ResponseEntity.ok(responses);
     }
 }

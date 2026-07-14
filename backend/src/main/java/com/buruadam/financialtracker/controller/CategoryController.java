@@ -1,9 +1,10 @@
 package com.buruadam.financialtracker.controller;
 
-import com.buruadam.financialtracker.dto.CategoryRequest;
-import com.buruadam.financialtracker.dto.CategoryResponse;
+import com.buruadam.financialtracker.dto.category.CategoryCreateRequest;
+import com.buruadam.financialtracker.dto.category.CategoryResponseDto;
 import com.buruadam.financialtracker.security.CustomUserDetails;
 import com.buruadam.financialtracker.service.CategoryService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,14 +23,14 @@ public class CategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<CategoryResponse> createCategory(@RequestBody CategoryRequest request, @AuthenticationPrincipal CustomUserDetails currentUserDetails) {
-        CategoryResponse response = categoryService.createCategory(request, currentUserDetails.getId());
+    public ResponseEntity<CategoryResponseDto> createCategory(@Valid @RequestBody CategoryCreateRequest request, @AuthenticationPrincipal CustomUserDetails currentUserDetails) {
+        CategoryResponseDto response = categoryService.createCategory(request, currentUserDetails.getId());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<CategoryResponse>> getAllCategories(@AuthenticationPrincipal CustomUserDetails currentUserDetails) {
-        List<CategoryResponse> responses = categoryService.getAllCategories(currentUserDetails.getId());
+    public ResponseEntity<List<CategoryResponseDto>> getMyCategories(@AuthenticationPrincipal CustomUserDetails currentUserDetails) {
+        List<CategoryResponseDto> responses = categoryService.getMyCategories(currentUserDetails.getId());
         return ResponseEntity.ok(responses);
     }
 }

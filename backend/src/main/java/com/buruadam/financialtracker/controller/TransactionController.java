@@ -1,9 +1,10 @@
 package com.buruadam.financialtracker.controller;
 
-import com.buruadam.financialtracker.dto.TransactionRequest;
-import com.buruadam.financialtracker.dto.TransactionResponse;
+import com.buruadam.financialtracker.dto.transaction.TransactionCreateRequest;
+import com.buruadam.financialtracker.dto.transaction.TransactionResponseDto;
 import com.buruadam.financialtracker.security.CustomUserDetails;
 import com.buruadam.financialtracker.service.TransactionService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,20 +24,22 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity<TransactionResponse> createTransaction(@RequestBody TransactionRequest request, @AuthenticationPrincipal CustomUserDetails currentUserDetails) {
-        TransactionResponse response = transactionService.createTransaction(request, currentUserDetails.getId());
+    public ResponseEntity<TransactionResponseDto> createTransaction(@Valid @RequestBody TransactionCreateRequest request, @AuthenticationPrincipal CustomUserDetails currentUserDetails) {
+        TransactionResponseDto response = transactionService.createTransaction(request, currentUserDetails.getId());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @GetMapping("/account/{accountId}")
-    public ResponseEntity<List<TransactionResponse>> getTransactionsByAccount(@PathVariable UUID accountId, @AuthenticationPrincipal CustomUserDetails currentUserDetails) {
-        List<TransactionResponse> responses = transactionService.getTransactionsByAccount(accountId, currentUserDetails.getId());
+    @GetMapping
+    public ResponseEntity<List<TransactionResponseDto>> getMyTransactions(@AuthenticationPrincipal CustomUserDetails currentUserDetails) {
+        List<TransactionResponseDto> responses = transactionService.getMyTransactions(currentUserDetails.getId());
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping
-    public ResponseEntity<List<TransactionResponse>> getAllTransactions(@AuthenticationPrincipal CustomUserDetails currentUserDetails) {
-        List<TransactionResponse> responses = transactionService.getAllTransactionsForCurrentUser(currentUserDetails.getId());
+    @GetMapping("/account/{accountId}")
+    public ResponseEntity<List<TransactionResponseDto>> getTransactionsByAccount(@PathVariable UUID accountId, @AuthenticationPrincipal CustomUserDetails currentUserDetails) {
+
+        List<TransactionResponseDto> responses = transactionService.getTransactionsByAccount(accountId, currentUserDetails.getId());
         return ResponseEntity.ok(responses);
     }
+
 }

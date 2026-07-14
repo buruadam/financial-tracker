@@ -1,8 +1,8 @@
 package com.buruadam.financialtracker.controller;
 
-import com.buruadam.financialtracker.dto.UserLoginRequest;
-import com.buruadam.financialtracker.dto.UserRegisterRequest;
-import com.buruadam.financialtracker.dto.UserResponse;
+import com.buruadam.financialtracker.dto.auth.LoginRequest;
+import com.buruadam.financialtracker.dto.auth.RegisterRequest;
+import com.buruadam.financialtracker.dto.auth.UserResponseDto;
 import com.buruadam.financialtracker.security.CookieService;
 import com.buruadam.financialtracker.service.AuthService;
 import jakarta.validation.Valid;
@@ -28,13 +28,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRegisterRequest request) {
-        UserResponse response = authService.register(request);
+    public ResponseEntity<UserResponseDto> register(@Valid @RequestBody RegisterRequest request) {
+        UserResponseDto response = authService.register(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@Valid @RequestBody UserLoginRequest request) {
+    public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest request) {
         String token = authService.login(request);
         ResponseCookie cookie = cookieService.createJwtCookie(token);
 

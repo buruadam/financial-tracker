@@ -1,4 +1,4 @@
-package com.buruadam.financialtracker.dto;
+package com.buruadam.financialtracker.dto.account;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

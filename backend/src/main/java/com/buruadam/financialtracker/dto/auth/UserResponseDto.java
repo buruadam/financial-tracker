@@ -1,0 +1,11 @@
+package com.buruadam.financialtracker.dto.auth;
+
+import java.util.UUID;
+
+public record UserResponseDto(
+        UUID id,
+        String username,
+        String email,
+        String createdAt
+) {
+}
