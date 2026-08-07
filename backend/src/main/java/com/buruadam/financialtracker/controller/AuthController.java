@@ -10,10 +10,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -34,13 +33,15 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<UserResponseDto> login(@Valid @RequestBody LoginRequest request) {
         String token = authService.login(request);
         ResponseCookie cookie = cookieService.createJwtCookie(token);
 
+        UserResponseDto userResponse = authService.getCurrentUser(request.usernameOrEmail());
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .build();
+                .body(userResponse);
     }
 
     @PostMapping("/logout")
@@ -51,4 +52,15 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .build();
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDto> getCurrentUser(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        UserResponseDto response = authService.getCurrentUser(principal.getName());
+        return ResponseEntity.ok(response);
+    }
+
 }

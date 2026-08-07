@@ -5,6 +5,7 @@ import com.buruadam.financialtracker.dto.auth.RegisterRequest;
 import com.buruadam.financialtracker.dto.auth.UserResponseDto;
 import com.buruadam.financialtracker.entity.User;
 import com.buruadam.financialtracker.exception.ResourceAlreadyExistsException;
+import com.buruadam.financialtracker.exception.ResourceNotFoundException;
 import com.buruadam.financialtracker.mapper.UserMapper;
 import com.buruadam.financialtracker.repository.UserRepository;
 import com.buruadam.financialtracker.security.JwtService;
@@ -56,4 +57,13 @@ public class AuthService {
 
         return jwtService.generateToken(userDetails);
     }
+
+    @Transactional(readOnly = true)
+    public UserResponseDto getCurrentUser(String usernameOrEmail) {
+        User user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        return userMapper.toResponseDto(user);
+    }
+
 }
