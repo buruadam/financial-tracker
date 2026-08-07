@@ -7,6 +7,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,9 +25,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
-    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
+    private final String cookieName;
+
+    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService, @Value("${app.cookie.name}") String cookieName) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+        this.cookieName = cookieName;
     }
 
     @Override
@@ -41,7 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
-                if ("jwt_token".equals(cookie.getName())) {
+                if (cookieName.equals(cookie.getName())) {
                     jwt = cookie.getValue();
                     break;
                 }

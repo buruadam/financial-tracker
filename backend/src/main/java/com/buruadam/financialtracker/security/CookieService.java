@@ -10,10 +10,13 @@ public class CookieService {
     @Value("${app.jwt.expiration}")
     private long jwtExpirationMs;
 
+    @Value("${app.cookie.name}")
+    private String cookieName;
+
     public ResponseCookie createJwtCookie(String token) {
         long maxAgeSeconds = jwtExpirationMs / 1000;
 
-        return ResponseCookie.from("jwt_token", token)
+        return ResponseCookie.from(cookieName, token)
                 .httpOnly(true)
                 .secure(false)
                 .path("/")
@@ -23,7 +26,7 @@ public class CookieService {
     }
 
     public ResponseCookie cleanJwtCookie() {
-        return ResponseCookie.from("jwt_token", "")
+        return ResponseCookie.from(cookieName, "")
                 .httpOnly(true)
                 .secure(false)
                 .path("/")
