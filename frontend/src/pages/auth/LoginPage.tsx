@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Lock, User, ArrowRight, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 
 export default function LoginPage() {
     const { login } = useAuth();
+    const navigate = useNavigate();
     const location = useLocation();
 
     const [loading, setLoading] = useState(false);
@@ -30,7 +31,7 @@ export default function LoginPage() {
 
         try {
             await login({ usernameOrEmail: identifier, password });
-            console.log('Login successful');
+            navigate('/dashboard');
         } catch (err: any) {
             const errorData = err.response?.data;
 
