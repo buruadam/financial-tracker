@@ -3,8 +3,11 @@ import { RefreshCw, ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import { transactionService } from '../../api/transaction/transactionService';
 import type { TransactionResponse } from '../../api/transaction/types';
 
+type FilterType = 'ALL' | 'INCOME' | 'EXPENSE';
+
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('ALL');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -30,6 +33,11 @@ export default function TransactionsPage() {
     return amount.toLocaleString('hu-HU', { minimumFractionDigits: 2 }) + ' Ft';
   };
 
+  const filteredTransactions = transactions.filter((t) => {
+    if (activeFilter === 'ALL') return true;
+    return t.transactionType === activeFilter;
+  });
+
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex justify-between items-center border-b border-zinc-100 pb-5">
@@ -47,6 +55,38 @@ export default function TransactionsPage() {
           <RefreshCw size={20} className={`${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
+
+      {!error && transactions.length > 0 && (
+        <div className="flex gap-1.5 p-1 bg-zinc-100 rounded-xl w-fit">
+          <button
+            onClick={() => setActiveFilter('ALL')}
+            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${activeFilter === 'ALL'
+              ? 'bg-white text-zinc-950 shadow-sm'
+              : 'text-zinc-500 hover:text-zinc-900'
+              }`}
+          >
+            All ({transactions.length})
+          </button>
+          <button
+            onClick={() => setActiveFilter('INCOME')}
+            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${activeFilter === 'INCOME'
+              ? 'bg-white text-emerald-600 shadow-sm'
+              : 'text-zinc-500 hover:text-emerald-600'
+              }`}
+          >
+            Income ({transactions.filter(t => t.transactionType === 'INCOME').length})
+          </button>
+          <button
+            onClick={() => setActiveFilter('EXPENSE')}
+            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${activeFilter === 'EXPENSE'
+              ? 'bg-white text-red-500 shadow-sm'
+              : 'text-zinc-500 hover:text-red-500'
+              }`}
+          >
+            Expenses ({transactions.filter(t => t.transactionType === 'EXPENSE').length})
+          </button>
+        </div>
+      )}
 
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-2xl text-sm flex items-center gap-2">
@@ -67,8 +107,14 @@ export default function TransactionsPage() {
         </div>
       )}
 
+      {!loading && filteredTransactions.length === 0 && !error && transactions.length > 0 && (
+        <div className="text-center py-8 bg-zinc-50 rounded-2xl border border-dashed border-zinc-200">
+          <p className="text-zinc-400 text-sm font-medium">No transactions match the selected filter.</p>
+        </div>
+      )}
+
       <div className="space-y-3">
-        {transactions.map((t) => {
+        {filteredTransactions.map((t) => {
           const isIncome = t.transactionType === 'INCOME';
           return (
             <div
